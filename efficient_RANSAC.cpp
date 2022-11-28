@@ -179,7 +179,25 @@ int main (int argc, char** argv) {
     it++;
   }
 
-  
+  Efficient_ransac::Point_index_iterator un_it = ransac.indices_of_unassigned_points().begin();
+  primitive_color[0] = 220; primitive_color[1] = 220; primitive_color[2] = 220;
+  while (un_it != ransac.indices_of_unassigned_points().end()) {
+      // Retrieve point.
+      const Point_with_normal& p = *(points.begin() + (*un_it));
+
+      pt.x = p.first.x();
+      pt.y = p.first.y();
+      pt.z = p.first.z();
+      pt.r = primitive_color[0];
+      pt.g = primitive_color[1];
+      pt.b = primitive_color[2];
+      Colored_Cloud->points.push_back(pt);
+
+      // Proceed with the next point.
+      un_it++;
+    }
+
+
   pcl::visualization::CloudViewer viewer("Simple Cloud Viewer");
   viewer.showCloud(Colored_Cloud);
   while (!viewer.wasStopped ())
