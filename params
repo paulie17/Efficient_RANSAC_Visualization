@@ -1,0 +1,9 @@
+probability  0.01
+
+min_points  100
+
+epsilon  2.012
+
+cluster_epsilon  4.024
+
+normal_threshold  0.39

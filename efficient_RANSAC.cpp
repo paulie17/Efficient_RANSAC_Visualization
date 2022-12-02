@@ -78,28 +78,37 @@ int main (int argc, char** argv) {
   // Set parameters for shape detection.
   Efficient_ransac::Parameters parameters;
 
-  // Set probability to miss the largest primitive at each iteration.
-  parameters.probability = 0.01;
+  std::ifstream params_file("../params");
+  std::string dummy_string;
+  params_file >> dummy_string >> parameters.probability;
+  std::cout << "Probability: " << parameters.probability << std::endl;
+  params_file >> dummy_string >> parameters.min_points;
+  std::cout << "Min Points: " << parameters.min_points << std::endl;
+  params_file >> dummy_string >> parameters.epsilon;
+  std::cout << "Epsilon: " << parameters.epsilon << std::endl;
+  params_file >> dummy_string >> parameters.cluster_epsilon;
+  std::cout << "Cluster Epsilon: " << parameters.cluster_epsilon << std::endl;
+  params_file >> dummy_string >> parameters.normal_threshold;
+  std::cout << "Normal Threshold: " << parameters.normal_threshold << std::endl;
 
-  // Detect shapes with at least 200 points.
-  parameters.min_points = 200;
+  // // Set probability to miss the largest primitive at each iteration.
+  // parameters.probability = 0.01;
 
-  // Set maximum Euclidean distance between a point and a shape.
-  parameters.epsilon = 2.012;
+  // // Detect shapes with at least 200 points.
+  // parameters.min_points = 200;
 
-  // Set maximum Euclidean distance between points to be clustered.
-  parameters.cluster_epsilon = 4.024;
+  // // Set maximum Euclidean distance between a point and a shape.
+  // parameters.epsilon = 2.012;
 
-  // Set maximum normal deviation.
-  // 0.9 < dot(surface_normal, point_normal);
-  parameters.normal_threshold = 0.39;
+  // // Set maximum Euclidean distance between points to be clustered.
+  // parameters.cluster_epsilon = 4.024;
+
+  // // Set maximum normal deviation.
+  // parameters.normal_threshold = 0.39;
   
   // Detect shapes.
   ransac.detect(parameters);
 
-  // pcl::PointCloud<pcl::PointXYZRGBNormal> Colored_Cloud;
-  // pcl::PointXYZRGBNormal pt; 
-  // pcl::PointCloud<pcl::PointXYZRGB> Colored_Cloud;
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr Colored_Cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
   pcl::PointXYZRGB pt; 
   Color primitive_color;
