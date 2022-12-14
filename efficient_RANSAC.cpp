@@ -9,6 +9,7 @@
 #include <CGAL/property_map.h>
 #include <CGAL/IO/read_points.h>
 #include <CGAL/Point_with_normal_3.h>
+#include <CGAL/optimal_bounding_box.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Shape_detection/Efficient_RANSAC.h>
 
@@ -50,6 +51,9 @@ int main (int argc, char** argv) {
   // Points with normals.
   Pwn_vector points;
 
+  // Points.
+  std::vector<Point> points_xyz;
+
   // Load point set from a file.
 
   if (!CGAL::IO::read_points(
@@ -58,9 +62,43 @@ int main (int argc, char** argv) {
         CGAL::parameters::point_map(Point_map()).
         normal_map(Normal_map()))) {
 
-    std::cerr << "Error: cannot read file cube.pwn!" << std::endl;
+    std::cerr << "Error: cannot read file! Provide a proper path to a point cloud." << std::endl;
     return EXIT_FAILURE;
   }
+
+  CGAL::IO::read_PLY(filename,std::back_inserter(points_xyz));
+  // Compute bounding box
+  std::array<Point, 8> obb_points;
+  Point min_corner;
+  Point max_corner;
+  CGAL::oriented_bounding_box(points_xyz, obb_points,
+                              CGAL::parameters::use_convex_hull(true));
+  min_corner = obb_points[0];
+  max_corner = obb_points[0];
+  for (int i = 1; i < obb_points.size(); i++){
+    if (min_corner.x() < obb_points[i].x() &&
+        min_corner.y() < obb_points[i].y() &&
+        min_corner.z() < obb_points[i].z() 
+    ) {
+      min_corner = obb_points[i];
+    }
+
+  }
+  for (int i = 1; i < obb_points.size(); i++){
+    if (max_corner.x() > obb_points[i].x() &&
+        max_corner.y() > obb_points[i].y() &&
+        max_corner.z() > obb_points[i].z() 
+    ) {
+      max_corner = obb_points[i];
+    }
+
+  }
+  float scale = std::max(std::max(std::abs(max_corner.x() - min_corner.x()), 
+                                std::abs(max_corner.y() - min_corner.y())), 
+                                std::abs(max_corner.z() - min_corner.z()));
+  std::cout << "Scale factor: " << scale << std::endl;
+
+
 
   // Instantiate shape detection engine.
   Efficient_ransac ransac;
@@ -84,28 +122,13 @@ int main (int argc, char** argv) {
   std::cout << "Probability: " << parameters.probability << std::endl;
   params_file >> dummy_string >> parameters.min_points;
   std::cout << "Min Points: " << parameters.min_points << std::endl;
-  params_file >> dummy_string >> parameters.epsilon;
+  parameters.epsilon = 0.005*scale;
   std::cout << "Epsilon: " << parameters.epsilon << std::endl;
-  params_file >> dummy_string >> parameters.cluster_epsilon;
+  parameters.cluster_epsilon = 0.01*scale;
   std::cout << "Cluster Epsilon: " << parameters.cluster_epsilon << std::endl;
   params_file >> dummy_string >> parameters.normal_threshold;
   std::cout << "Normal Threshold: " << parameters.normal_threshold << std::endl;
 
-  // // Set probability to miss the largest primitive at each iteration.
-  // parameters.probability = 0.01;
-
-  // // Detect shapes with at least 200 points.
-  // parameters.min_points = 200;
-
-  // // Set maximum Euclidean distance between a point and a shape.
-  // parameters.epsilon = 2.012;
-
-  // // Set maximum Euclidean distance between points to be clustered.
-  // parameters.cluster_epsilon = 4.024;
-
-  // // Set maximum normal deviation.
-  // parameters.normal_threshold = 0.39;
-  
   // Detect shapes.
   ransac.detect(parameters);
 
